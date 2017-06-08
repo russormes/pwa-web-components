@@ -1,0 +1,34 @@
+{
+  "name": "webcomponents",
+  "version": "1.0.0",
+  "description": "Test app for learning TypeScript and Web Components",
+  "main": "lib/index",
+  "types": "lib/index",
+  "scripts": {
+    "start:server": "npm run build:live",
+    "build:live": "nodemon --exec ./node_modules/.bin/ts-node -- ./index.ts",
+    "test:server": "echo \"Error: no test specified\" && exit 1",
+    "test": "node_modules/.bin/mocha -r ts-node/register src/**/*.spec.ts",
+    "build": "node_modules/.bin/webpack",
+    "start": "node_modules/.bin/webpack-dev-server --hot",
+    "deploy": "npm install && npm run build && npm test && git add build && git commit -m 'publish' && git subtree push --prefix build origin gh-pages"
+  },
+  "keywords": [],
+  "author": "Russell Ormes",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.0.0",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^7.0.29",
+    "chai": "^4.0.2",
+    "copy-webpack-plugin": "^4.0.1",
+    "html-webpack-plugin": "^2.28.0",
+    "mocha": "^3.4.2",
+    "nodemon": "^1.11.0",
+    "ts-loader": "^2.1.0",
+    "ts-node": "^3.0.6",
+    "webpack": "^2.6.1",
+    "webpack-dev-server": "^2.4.5"
+  },
+  "dependencies": {}
+}
