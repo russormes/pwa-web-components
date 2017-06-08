@@ -1,0 +1,223 @@
+<template>
+
+<style>
+/*	Filter Form	*/
+
+.filters{
+	box-sizing: border-box;
+	padding: 5px 30px 30px;
+	width: 190px;
+	background-color: #FFF;
+	border: 1px solid #DBE3E7;
+	border-radius: 3px;
+	box-shadow: 1px 3px 1px rgba(0, 0, 0, 0.08);
+	position: fixed;
+	text-align: left;
+	color: #2B2E31;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.filters .filter-criteria{
+	display: block;
+	margin: 10px 0 10px;
+}
+
+.filters span{
+	font-size:14px;
+	display: block;
+	margin-bottom: 12px;
+	font-weight: bold;
+	margin-top: 20px;
+}
+
+.filters label{
+	display: block;
+	line-height: 1.4;
+	font-size: 15px;
+}
+
+.filters label input{
+	margin-right: 10px;
+}
+
+.filters button{
+	border-radius: 2px;
+	background-color:  #4BC34B;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+	border: 0;
+	color: #ffffff;
+	font-weight: bold;
+	font-size: 13px;
+	cursor: pointer;
+
+	width: 95px;
+	height: 32px;
+	margin-top: 10px;
+}
+
+</style>
+
+<div class="filters">
+	<form>
+
+		<div class="filter-criteria">
+			<span>Manufacturer</span>
+			<label><input type="checkbox" name="manufacturer" value="apple">Apple</label>
+			<label><input type="checkbox" name="manufacturer" value="samsung">Samsung</label>
+			<label><input type="checkbox" name="manufacturer" value="htc">HTC</label>
+			<label><input type="checkbox" name="manufacturer" value="nokia">Nokia</label>
+			<label><input type="checkbox" name="manufacturer" value="zte">ZTE</label>
+			<label><input type="checkbox" name="manufacturer" value="sony">Sony</label>
+		</div>
+
+		<div class="filter-criteria">
+			<span>Screen Size</span>
+			<label><input type="checkbox" value="16" name="storage">16 GB</label>
+			<label><input type="checkbox" value="32" name="storage">32 GB</label>
+		</div>
+
+		<div class="filter-criteria">
+			<span>OS</span>
+			<label><input type="checkbox" value="android" name="os">Android</label>
+			<label><input type="checkbox" value="ios" name="os">iOS</label>
+			<label><input type="checkbox" value="windows" name="os">Windows</label>
+		</div>
+
+		<div class="filter-criteria">
+			<span>Camera</span>
+			<label><input type="checkbox" value="5" name="camera">5 Mpx</label>
+			<label><input type="checkbox" value="8" name="camera">8 Mpx</label>
+			<label><input type="checkbox" value="12" name="camera">12 Mpx</label>
+			<label><input type="checkbox" value="15" name="camera">15 Mpx</label>
+		</div>
+
+		<button>Clear filters</button>
+
+	</form>
+</div>
+</template>
+
+<script>
+(function( window, document, undefined ) {
+	// Refers to the "importer", which is index.html
+	const thatDoc = document;
+
+	// Refers to the "importee", which is filter-cb.html
+	const thisDoc = ( thatDoc._currentScript || thatDoc.currentScript ).ownerDocument;
+
+	// Gets content from <template>.
+	const template = thisDoc.querySelector( 'template' ).content;
+
+	class FilterCB extends HTMLElement {
+
+		constructor() {
+			super();
+
+			// Our filters object will contain an array of values for each filter
+
+			// Example:
+			// filters = {
+			// 		"manufacturer" = ["Apple","Sony"],
+			//		"storage" = [16]
+			//	}
+			this.filtersList = {};
+		}
+
+		connectedCallback() {
+			const shadowRoot = this.attachShadow( { mode:'open' } );
+
+			// Adds a template clone into shadow root.
+			const clone = thatDoc.importNode( template, true );
+			shadowRoot.appendChild( clone );
+
+			const filters = shadowRoot.querySelector( ".filters" );
+			this.init( filters );
+		}
+
+		// Get the filters object, turn it into a string and write it into the hash.
+		createQueryHash( filtersList ){
+
+			// Here we check if filters isn't empty.
+			if(!$.isEmptyObject( filtersList )){
+				// Stringify the object via JSON.stringify and write it after the '#filter' keyword.
+				window.location.hash = '#filter/' + JSON.stringify( filtersList );
+			}
+			else{
+				// If it's empty change the hash to '#' (the homepage).
+				window.location.hash = '#';
+			}
+
+		}
+
+		init( filtersElem ) {
+
+			//	Event handlers for frontend navigation
+
+			//	Checkbox filtering
+
+			const checkboxes = filters.querySelectorAll("input[type='checkbox']");
+			function addEventListenerList(list, event, fn) {
+				for (var i = 0, len = list.length; i < len; i++) {
+					list[i].addEventListener(event, fn, false);
+				}
+			}
+
+			addEventListenerList(checkboxes, 'click', function () {
+
+				const that = this,
+				filtersList = this.filtersList,
+				specName = that.attr('name');
+
+				// When a checkbox is checked we need to write that in the filters object;
+				if(that.is(":checked")) {
+
+					// If the filter for this specification isn't created yet - do it.
+					if(!(filtersList[specName] && filtersList[specName].length)){
+						filtersList[specName] = [];
+					}
+
+					//	Push values into the chosen filter array
+					filtersList[specName].push(that.val());
+
+					// Change the url hash;
+					createQueryHash(filtersList);
+
+				}
+
+				// When a checkbox is unchecked we need to remove its value from the filters object.
+				if(!that.is(":checked")) {
+
+					if(filtersList[specName] && filtersList[specName].length && (filtersList[specName].indexOf(that.val()) != -1)){
+
+						// Find the checkbox value in the corresponding array inside the filtersList object.
+						const index = filtersList[specName].indexOf(that.val());
+
+						// Remove it.
+						filtersList[specName].splice(index, 1);
+
+						// If it was the last remaining value for this specification,
+						// delete the whole array.
+						if(!filtersList[specName].length){
+							delete filtersList[specName];
+						}
+
+					}
+
+					// Change the url hash;
+					createQueryHash(filtersList);
+				}
+			});
+
+			// When the "Clear all filters" button is pressed change the hash to '#' (go to the home page)
+			$('.filters button').click(function (e) {
+				e.preventDefault();
+				window.location.hash = '#';
+			});
+		}
+	}
+
+	window.customElements.define( 'filter-cb', FilterCB );
+})(window, document);
+
+</script>
